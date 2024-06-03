@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"os"
-	"path/filepath"
 
 	"github.com/go-faster/errors"
 	"github.com/gotd/td/telegram"
@@ -41,6 +40,7 @@ func (c *CustomProgressTracker) Chunk(ctx context.Context, state uploader.Progre
 
 type Options struct {
 	Path string
+	Name string
 }
 
 type UploadResult struct {
@@ -73,7 +73,7 @@ func Run(ctx context.Context, c *telegram.Client, kvd kv.KV, opts Options) (rerr
 		return errors.Wrap(err, "open file")
 	}
 
-	uploaded, err := up.Upload(ctx, uploader.NewUpload(filepath.Base(opts.Path), f, stat.Size()))
+	uploaded, err := up.Upload(ctx, uploader.NewUpload(opts.Name, f, stat.Size()))
 	if err != nil {
 		return errors.Wrap(err, "upload file")
 	}

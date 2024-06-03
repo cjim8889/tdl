@@ -29,6 +29,7 @@ func NewRawUpload() *cobra.Command {
 		path = "path"
 	)
 	cmd.Flags().StringVarP(&opts.Path, path, "p", "", "file")
+	cmd.Flags().StringVar(&opts.Name, "name", "default", "name")
 
 	// completion and validation
 	_ = cmd.MarkFlagRequired(path)
