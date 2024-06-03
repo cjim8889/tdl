@@ -88,6 +88,8 @@ func Run(ctx context.Context, c *telegram.Client, kvd kv.KV, opts Options) (rerr
 	case *tg.InputFile:
 		result.MD5Checksum = uploaded.GetMD5Checksum()
 		result.IsBigFile = false
+	case *tg.InputFileBig:
+		result.IsBigFile = true
 	}
 
 	// Print out the json of result in std out using golang std
