@@ -7,8 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/iyear/tdl/app/raw_up"
-	"github.com/iyear/tdl/pkg/kv"
-	"github.com/iyear/tdl/pkg/logger"
+	"github.com/iyear/tdl/core/storage"
 )
 
 func NewRawUpload() *cobra.Command {
@@ -19,8 +18,8 @@ func NewRawUpload() *cobra.Command {
 		Aliases: []string{"rup"},
 		Short:   "Upload anything to Telegram Without Sending",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return tRun(cmd.Context(), func(ctx context.Context, c *telegram.Client, kvd kv.KV) error {
-				return raw_up.Run(logger.Named(ctx, "up"), c, kvd, opts)
+			return tRun(cmd.Context(), func(ctx context.Context, c *telegram.Client, kvd storage.Storage) error {
+				return raw_up.Run(ctx, c, kvd, opts)
 			})
 		},
 	}

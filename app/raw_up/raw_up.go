@@ -13,10 +13,10 @@ import (
 
 	"github.com/gotd/td/telegram/uploader"
 	"github.com/gotd/td/tg"
+	"github.com/iyear/tdl/core/dcpool"
+	"github.com/iyear/tdl/core/storage"
+	"github.com/iyear/tdl/core/tclient"
 	"github.com/iyear/tdl/pkg/consts"
-	"github.com/iyear/tdl/pkg/dcpool"
-	"github.com/iyear/tdl/pkg/kv"
-	"github.com/iyear/tdl/pkg/tclient"
 )
 
 // CustomProgressTracker implements the Progress interface to track upload progress.
@@ -51,7 +51,7 @@ type UploadResult struct {
 	IsBigFile   bool   `json:"is_big_file"`
 }
 
-func Run(ctx context.Context, c *telegram.Client, kvd kv.KV, opts Options) (rerr error) {
+func Run(ctx context.Context, c *telegram.Client, kvd storage.Storage, opts Options) (rerr error) {
 	// Check if the file exists
 	stat, err := os.Stat(opts.Path)
 	if err != nil {
@@ -78,17 +78,19 @@ func Run(ctx context.Context, c *telegram.Client, kvd kv.KV, opts Options) (rerr
 		return errors.Wrap(err, "upload file")
 	}
 
-	result := UploadResult{
-		ID:    uploaded.GetID(),
-		Name:  uploaded.GetName(),
-		Parts: uploaded.GetParts(),
-	}
+	result := &UploadResult{}
 
 	switch uploaded := uploaded.(type) {
 	case *tg.InputFile:
 		result.MD5Checksum = uploaded.GetMD5Checksum()
+		result.ID = uploaded.GetID()
+		result.Name = uploaded.GetName()
+		result.Parts = uploaded.GetParts()
 		result.IsBigFile = false
 	case *tg.InputFileBig:
+		result.ID = uploaded.GetID()
+		result.Name = uploaded.GetName()
+		result.Parts = uploaded.GetParts()
 		result.IsBigFile = true
 	}
 
