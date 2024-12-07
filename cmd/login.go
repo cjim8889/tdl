@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/iyear/tdl/app/login"
-	"github.com/iyear/tdl/pkg/logger"
+	"github.com/iyear/tdl/core/logctx"
 )
 
 func NewLogin() *cobra.Command {
@@ -18,17 +18,18 @@ func NewLogin() *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use:   "login",
-		Short: "Login to Telegram",
+		Use:     "login",
+		Short:   "Login to Telegram",
+		GroupID: groupAccount.ID,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			color.Yellow("WARN: If data exists in the namespace, data will be overwritten")
 
 			// Legacy flag
 			if code {
-				return login.Code(logger.Named(cmd.Context(), "login"))
+				return login.Code(logctx.Named(cmd.Context(), "login"))
 			}
 
-			return login.Run(logger.Named(cmd.Context(), "login"), opts)
+			return login.Run(logctx.Named(cmd.Context(), "login"), opts)
 		},
 	}
 

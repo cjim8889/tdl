@@ -57,10 +57,10 @@ tdl dl -u https://t.me/tdl/1 -d /path/to/dir
 
 ## 自定义参数：
 
-使用每个任务8个线程，512KiB（最大）的分块大小，4个并发任务下载：
+使用每个任务8个线程，4个并发任务下载：
 
 {{< command >}}
-tdl dl -u https://t.me/tdl/1 -t 8 -s 524288 -l 4
+tdl dl -u https://t.me/tdl/1 -t 8 -l 4
 {{< /command >}}
 
 ## 反序下载：
@@ -85,6 +85,14 @@ tdl dl -f result.json --desc
 
 {{< command >}}
 tdl dl -u https://t.me/tdl/1 --rewrite-ext
+{{< /command >}}
+
+## 相册/组合消息探测
+
+自动检测消息是否为相册/组合消息，并下载相应的所有文件。
+
+{{< command >}}
+tdl dl -u https://t.me/tdl/1 --group
 {{< /command >}}
 
 ## 自动跳过

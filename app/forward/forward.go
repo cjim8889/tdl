@@ -17,16 +17,15 @@ import (
 	"go.uber.org/multierr"
 
 	"github.com/iyear/tdl/app/internal/tctx"
+	"github.com/iyear/tdl/core/dcpool"
+	"github.com/iyear/tdl/core/forwarder"
+	"github.com/iyear/tdl/core/storage"
+	"github.com/iyear/tdl/core/tclient"
+	"github.com/iyear/tdl/core/util/tutil"
 	"github.com/iyear/tdl/pkg/consts"
-	"github.com/iyear/tdl/pkg/dcpool"
-	"github.com/iyear/tdl/pkg/forwarder"
-	"github.com/iyear/tdl/pkg/kv"
 	"github.com/iyear/tdl/pkg/prog"
-	"github.com/iyear/tdl/pkg/storage"
-	"github.com/iyear/tdl/pkg/tclient"
 	"github.com/iyear/tdl/pkg/texpr"
 	"github.com/iyear/tdl/pkg/tmessage"
-	"github.com/iyear/tdl/pkg/utils"
 )
 
 type Options struct {
@@ -40,7 +39,7 @@ type Options struct {
 	Desc   bool
 }
 
-func Run(ctx context.Context, c *telegram.Client, kvd kv.KV, opts Options) (rerr error) {
+func Run(ctx context.Context, c *telegram.Client, kvd storage.Storage, opts Options) (rerr error) {
 	if opts.To == "-" || opts.Edit == "-" {
 		fg := texpr.NewFieldsGetter(nil)
 
@@ -98,7 +97,6 @@ func Run(ctx context.Context, c *telegram.Client, kvd kv.KV, opts Options) (rerr
 			delay:   viper.GetDuration(consts.FlagDelay),
 		}),
 		Progress: newProgress(fwProgress),
-		PartSize: viper.GetInt(consts.FlagPartSize),
 		Threads:  viper.GetInt(consts.FlagThreads),
 	})
 
@@ -162,7 +160,7 @@ func resolveDest(ctx context.Context, manager *peers.Manager, input string) (*vm
 	}
 
 	// chat
-	if _, err := utils.Telegram.GetInputPeer(ctx, manager, input); err == nil {
+	if _, err := tutil.GetInputPeer(ctx, manager, input); err == nil {
 		// convert to const string
 		return compile(fmt.Sprintf(`"%s"`, input))
 	}

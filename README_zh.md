@@ -1,14 +1,16 @@
-<h1 align="center">tdl</h1>
+> [!IMPORTANT]
+> 中文文档可能落后于英文文档，如果有问题请先查看英文文档。
+> 请使用英文发起新的 Issue, 以便于追踪和搜索
 
-<p align="center">
-📥 Telegram Downloader, but more than a downloader
-</p>
+# tdl
 
-<p align="center">
+<img align="right" src="docs/assets/img/logo.png" height="280" alt="">
+
+> 📥 Telegram Downloader, but more than a downloader
+
 <a href="README.md">English</a> | 简体中文
-</p>
 
-<p align="center">
+<p>
 <img src="https://img.shields.io/github/go-mod/go-version/iyear/tdl?style=flat-square" alt="">
 <img src="https://img.shields.io/github/license/iyear/tdl?style=flat-square" alt="">
 <img src="https://img.shields.io/github/actions/workflow/status/iyear/tdl/master.yml?branch=master&amp;style=flat-square" alt="">
@@ -16,11 +18,7 @@
 <img src="https://img.shields.io/github/downloads/iyear/tdl/total?style=flat-square" alt="">
 </p>
 
-> [!IMPORTANT]
-> 中文文档可能落后于英文文档，如果有问题请先查看英文文档。
-> 请使用英文发起新的 Issue, 以便于追踪和搜索
-
-## 特性
+#### 特性：
 
 - 单文件启动
 - 低资源占用
@@ -35,7 +33,7 @@
 
 预览中的速度已经达到了代理的限制，同时**速度取决于你是否是付费用户**
 
-![](img/preview.gif)
+![](docs/assets/img/preview.gif)
 
 ## 文档
 
@@ -44,6 +42,11 @@
 ## 赞助者
 
 ![](https://raw.githubusercontent.com/iyear/sponsor/master/sponsors.svg)
+
+## 贡献者
+<a href="https://github.com/iyear/tdl/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=iyear/tdl&max=750&columns=20" alt="contributors"/>
+</a>
 
 ## 协议
 

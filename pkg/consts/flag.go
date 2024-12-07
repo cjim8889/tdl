@@ -5,7 +5,7 @@ const (
 	FlagProxy            = "proxy"
 	FlagNamespace        = "ns"
 	FlagDebug            = "debug"
-	FlagPartSize         = "size"
+	FlagPartSize         = "size" // Deprecated: all part size should be set to maximum by default
 	FlagThreads          = "threads"
 	FlagLimit            = "limit"
 	FlagPoolSize         = "pool"
@@ -13,5 +13,4 @@ const (
 	FlagNTP              = "ntp"
 	FlagReconnectTimeout = "reconnect-timeout"
 	FlagDlTemplate       = "template"
-	FlagTest             = "test"
 )

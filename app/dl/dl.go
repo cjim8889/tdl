@@ -14,15 +14,14 @@ import (
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
 
+	"github.com/iyear/tdl/core/dcpool"
+	"github.com/iyear/tdl/core/downloader"
+	"github.com/iyear/tdl/core/logctx"
+	"github.com/iyear/tdl/core/storage"
+	"github.com/iyear/tdl/core/tclient"
 	"github.com/iyear/tdl/pkg/consts"
-	"github.com/iyear/tdl/pkg/dcpool"
-	"github.com/iyear/tdl/pkg/downloader"
 	"github.com/iyear/tdl/pkg/key"
-	"github.com/iyear/tdl/pkg/kv"
-	"github.com/iyear/tdl/pkg/logger"
 	"github.com/iyear/tdl/pkg/prog"
-	"github.com/iyear/tdl/pkg/storage"
-	"github.com/iyear/tdl/pkg/tclient"
 	"github.com/iyear/tdl/pkg/tmessage"
 	"github.com/iyear/tdl/pkg/utils"
 )
@@ -38,6 +37,7 @@ type Options struct {
 	Exclude    []string
 	Desc       bool
 	Takeout    bool
+	Group      bool // auto detect grouped message
 
 	// resume opts
 	Continue, Restart bool
@@ -52,7 +52,7 @@ type parser struct {
 	Parser tmessage.ParseSource
 }
 
-func Run(ctx context.Context, c *telegram.Client, kvd kv.KV, opts Options) (rerr error) {
+func Run(ctx context.Context, c *telegram.Client, kvd storage.Storage, opts Options) (rerr error) {
 	pool := dcpool.NewPool(c,
 		int64(viper.GetInt(consts.FlagPoolSize)),
 		tclient.NewDefaultMiddlewares(ctx, viper.GetDuration(consts.FlagReconnectTimeout))...)
@@ -66,7 +66,7 @@ func Run(ctx context.Context, c *telegram.Client, kvd kv.KV, opts Options) (rerr
 	if err != nil {
 		return err
 	}
-	logger.From(ctx).Debug("Collect dialogs",
+	logctx.From(ctx).Debug("Collect dialogs",
 		zap.Any("dialogs", dialogs))
 
 	if opts.Serve {
@@ -93,7 +93,7 @@ func Run(ctx context.Context, c *telegram.Client, kvd kv.KV, opts Options) (rerr
 		if rerr != nil { // download is interrupted
 			multierr.AppendInto(&rerr, saveProgress(ctx, kvd, it))
 		} else { // if finished, we should clear resume key
-			multierr.AppendInto(&rerr, kvd.Delete(key.Resume(it.Fingerprint())))
+			multierr.AppendInto(&rerr, kvd.Delete(ctx, key.Resume(it.Fingerprint())))
 		}
 	}()
 
@@ -103,18 +103,16 @@ func Run(ctx context.Context, c *telegram.Client, kvd kv.KV, opts Options) (rerr
 
 	options := downloader.Options{
 		Pool:     pool,
-		PartSize: viper.GetInt(consts.FlagPartSize),
 		Threads:  viper.GetInt(consts.FlagThreads),
 		Iter:     it,
 		Progress: newProgress(dlProgress, it, opts),
 	}
 	limit := viper.GetInt(consts.FlagLimit)
 
-	logger.From(ctx).Info("Start download",
+	logctx.From(ctx).Info("Start download",
 		zap.String("dir", opts.Dir),
 		zap.Bool("rewrite_ext", opts.RewriteExt),
 		zap.Bool("skip_same", opts.SkipSame),
-		zap.Int("part_size", options.PartSize),
 		zap.Int("threads", options.Threads),
 		zap.Int("limit", limit))
 
@@ -138,12 +136,12 @@ func collectDialogs(parsers []parser) ([][]*tmessage.Dialog, error) {
 	return dialogs, nil
 }
 
-func resume(ctx context.Context, kvd kv.KV, iter *iter, ask bool) error {
-	logger.From(ctx).Debug("Check resume key",
+func resume(ctx context.Context, kvd storage.Storage, iter *iter, ask bool) error {
+	logctx.From(ctx).Debug("Check resume key",
 		zap.String("fingerprint", iter.Fingerprint()))
 
-	b, err := kvd.Get(key.Resume(iter.Fingerprint()))
-	if err != nil && !errors.Is(err, kv.ErrNotFound) {
+	b, err := kvd.Get(ctx, key.Resume(iter.Fingerprint()))
+	if err != nil && !errors.Is(err, storage.ErrNotFound) {
 		return err
 	}
 	if len(b) == 0 { // no progress
@@ -173,26 +171,26 @@ func resume(ctx context.Context, kvd kv.KV, iter *iter, ask bool) error {
 		confirm = true
 	}
 
-	logger.From(ctx).Debug("Resume download",
+	logctx.From(ctx).Debug("Resume download",
 		zap.Int("finished", len(finished)))
 
 	if !confirm {
 		// clear resume key
-		return kvd.Delete(key.Resume(iter.Fingerprint()))
+		return kvd.Delete(ctx, key.Resume(iter.Fingerprint()))
 	}
 
 	iter.SetFinished(finished)
 	return nil
 }
 
-func saveProgress(ctx context.Context, kvd kv.KV, it *iter) error {
+func saveProgress(ctx context.Context, kvd storage.Storage, it *iter) error {
 	finished := it.Finished()
-	logger.From(ctx).Debug("Save progress",
+	logctx.From(ctx).Debug("Save progress",
 		zap.Int("finished", len(finished)))
 
 	b, err := json.Marshal(finished)
 	if err != nil {
 		return err
 	}
-	return kvd.Set(key.Resume(it.Fingerprint()), b)
+	return kvd.Set(ctx, key.Resume(it.Fingerprint()), b)
 }

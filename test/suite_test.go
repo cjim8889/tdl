@@ -1,19 +1,20 @@
 package test
 
 import (
+	"context"
+	_ "embed"
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"os"
-	"path/filepath"
-	"strconv"
 	"testing"
-	"time"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
 	tcmd "github.com/iyear/tdl/cmd"
+	"github.com/iyear/tdl/test/testserver"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -29,26 +30,19 @@ var (
 	args        []string
 	output      string
 	testAccount string
+	sessionFile string
 )
 
-func storageValue(test string) string {
-	return fmt.Sprintf("type=file,path=%s",
-		filepath.Join(os.TempDir(), "tdl", testAccount))
-}
-
-var _ = BeforeSuite(func() {
-	testAccount = strconv.FormatInt(time.Now().UnixNano(), 10)
-
-	exec(tcmd.New(), []string{"login", "--code"}, true)
+var _ = BeforeSuite(func(ctx context.Context) {
+	var err error
+	testAccount, sessionFile, err = testserver.Setup(ctx, rand.NewSource(GinkgoRandomSeed()))
+	Expect(err).To(Succeed())
 
 	log.SetOutput(GinkgoWriter)
 })
 
 var _ = BeforeEach(func() {
 	cmd = tcmd.New()
-
-	// wait before each test to avoid rate limit
-	time.Sleep(10 * time.Second)
 })
 
 func exec(cmd *cobra.Command, args []string, success bool) {
@@ -59,9 +53,8 @@ func exec(cmd *cobra.Command, args []string, success bool) {
 
 	log.Printf("args: %s\n", args)
 	cmd.SetArgs(append([]string{
-		"--test", testAccount,
 		"-n", testAccount,
-		"--storage", storageValue(testAccount),
+		"--storage", fmt.Sprintf("type=file,path=%s", sessionFile),
 	}, args...))
 	if err = cmd.Execute(); success {
 		Expect(err).To(Succeed())

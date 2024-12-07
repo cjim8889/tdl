@@ -13,11 +13,10 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"go.uber.org/zap"
 
-	"github.com/iyear/tdl/pkg/dcpool"
-	"github.com/iyear/tdl/pkg/kv"
-	"github.com/iyear/tdl/pkg/logger"
-	"github.com/iyear/tdl/pkg/storage"
-	"github.com/iyear/tdl/pkg/utils"
+	"github.com/iyear/tdl/core/dcpool"
+	"github.com/iyear/tdl/core/logctx"
+	"github.com/iyear/tdl/core/storage"
+	"github.com/iyear/tdl/core/util/tutil"
 )
 
 const (
@@ -36,7 +35,7 @@ type fMessage struct {
 	Text   interface{} `mapstructure:"text"`
 }
 
-func FromFile(ctx context.Context, pool dcpool.Pool, kvd kv.KV, files []string, onlyMedia bool) ParseSource {
+func FromFile(ctx context.Context, pool dcpool.Pool, kvd storage.Storage, files []string, onlyMedia bool) ParseSource {
 	return func() ([]*Dialog, error) {
 		dialogs := make([]*Dialog, 0, len(files))
 
@@ -46,7 +45,7 @@ func FromFile(ctx context.Context, pool dcpool.Pool, kvd kv.KV, files []string, 
 				return nil, err
 			}
 
-			logger.From(ctx).Debug("Parse file",
+			logctx.From(ctx).Debug("Parse file",
 				zap.String("file", file),
 				zap.Int("num", len(d.Messages)))
 			dialogs = append(dialogs, d)
@@ -56,7 +55,7 @@ func FromFile(ctx context.Context, pool dcpool.Pool, kvd kv.KV, files []string, 
 	}
 }
 
-func parseFile(ctx context.Context, client *tg.Client, kvd kv.KV, file string, onlyMedia bool) (*Dialog, error) {
+func parseFile(ctx context.Context, client *tg.Client, kvd storage.Storage, file string, onlyMedia bool) (*Dialog, error) {
 	f, err := os.Open(file)
 	if err != nil {
 		return nil, err
@@ -69,7 +68,7 @@ func parseFile(ctx context.Context, client *tg.Client, kvd kv.KV, file string, o
 	if err != nil {
 		return nil, err
 	}
-	logger.From(ctx).Debug("Got peer info",
+	logctx.From(ctx).Debug("Got peer info",
 		zap.Int64("id", peer.ID()),
 		zap.String("name", peer.VisibleName()))
 
@@ -118,7 +117,7 @@ func collect(ctx context.Context, r io.Reader, peer peers.Peer, onlyMedia bool) 
 	return m, nil
 }
 
-func getChatInfo(ctx context.Context, client *tg.Client, kvd kv.KV, r io.Reader) (peers.Peer, error) {
+func getChatInfo(ctx context.Context, client *tg.Client, kvd storage.Storage, r io.Reader) (peers.Peer, error) {
 	d := jstream.NewDecoder(r, 1).EmitKV()
 
 	chatID := int64(0)
@@ -143,5 +142,5 @@ func getChatInfo(ctx context.Context, client *tg.Client, kvd kv.KV, r io.Reader)
 	}
 
 	manager := peers.Options{Storage: storage.NewPeers(kvd)}.Build(client)
-	return utils.Telegram.GetInputPeer(ctx, manager, strconv.FormatInt(chatID, 10))
+	return tutil.GetInputPeer(ctx, manager, strconv.FormatInt(chatID, 10))
 }

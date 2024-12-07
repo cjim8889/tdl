@@ -9,6 +9,8 @@ module:
 
 # Needed for mermaid/katex shortcodes
 markup:
+  highlight:
+    style: onedark
   goldmark:
     renderer:
       unsafe: true
@@ -19,10 +21,11 @@ params:
   BookTheme: auto
   BookRepo: https://github.com/iyear/tdl
   BookSection: "*"
-  BookSearch: false
+  BookSearch: true # container will be mounted by docsearch
   BookEditPath: edit/master/docs
   BookCommitPath: commit
   BookDateFormat: 2006/01/02
+  BookTranslatedOnly: true
 
 languages:
   en:
